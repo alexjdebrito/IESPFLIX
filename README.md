@@ -1,221 +1,297 @@
-# Techback - Backend 1 Uniesp
+<div align="center">
 
-Projeto Spring Boot desenvolvido como parte da disciplina de Backend 1 da Uniesp, demonstrando boas práticas de desenvolvimento Java com arquitetura em camadas e testes abrangentes.
+# 🎬 IESPFLIX
 
-## 🚀 Tecnologias Utilizadas
+### Backend de Plataforma de Streaming
 
-- **Java 21** - Última versão LTS do Java
-- **Spring Boot 3.5.10** - Framework principal
-- **Spring Data JPA** - Persistência de dados
-- **H2 Database** - Banco de dados em arquivo para desenvolvimento
-- **SpringDoc OpenAPI 2.8.6** - Documentação de API
-- **Lombok 1.18.32** - Redução de código boilerplate
-- **OpenFeign** - Cliente HTTP declarativo (ViaCEP)
-- **Spring Security Crypto** - BCrypt para hash de senhas
-- **JUnit 5** - Framework de testes
-- **Mockito** - Framework para mocks em testes
-- **JaCoCo** - Análise de cobertura de testes
+[![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.10-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Spring Data JPA](https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=for-the-badge&logo=spring&logoColor=white)](https://spring.io/projects/spring-data-jpa)
+[![H2 Database](https://img.shields.io/badge/H2-Database-0000BB?style=for-the-badge&logo=h2&logoColor=white)](https://www.h2database.com/)
+[![Lombok](https://img.shields.io/badge/Lombok-1.18.32-BC4521?style=for-the-badge&logo=lombok&logoColor=white)](https://projectlombok.org/)
+[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI_3-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](https://swagger.io/)
+[![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![License](https://img.shields.io/badge/License-Academic-blue?style=for-the-badge)](LICENSE)
 
-## 📁 Estrutura do Projeto
+<br/>
+
+> API REST para gerenciamento de uma plataforma de streaming, desenvolvida com Spring Boot e arquitetura em camadas.
+> Projeto acadêmico da disciplina **Tecnologias para Backend (Spring Boot)** · UNIESP · Sistemas para Internet 2025/P3
+
+<br/>
+
+[📖 Documentação](#-documentação-da-api) · [🚀 Como Executar](#-como-executar) · [🗂️ Endpoints](#️-endpoints) · [👥 Equipe](#-equipe)
+
+</div>
+
+---
+
+## 📋 Sobre o Projeto
+
+O **IESPFLIX** é um backend completo para uma plataforma de streaming fictícia. Ele gerencia usuários, conteúdos, filmes, assinaturas, planos, favoritos, métodos de pagamento e funcionários, seguindo boas práticas de desenvolvimento Java com arquitetura em camadas, validações customizadas, logs rastreáveis e integração com APIs externas.
+
+### ✨ Destaques
+
+- 🔐 **Segurança** — senhas protegidas com BCrypt (hash unidirecional com salt)
+- ✅ **Validação customizada** — `@CpfCnpj` com algoritmo de dígitos verificadores
+- 📄 **Paginação** — retorno paginado com metadados em `/usuarios` e `/conteudos`
+- 🔍 **Rastreabilidade** — UUID por requisição via `CorrelationIdFilter` + MDC
+- 🌐 **Integrações externas** — ViaCEP (Feign) e BrasilAPI (RestTemplate)
+- ⚠️ **Tratamento de erros** — `GlobalExceptionHandler` com respostas padronizadas
+- 📚 **Documentação** — Swagger UI gerado automaticamente pelo SpringDoc
+
+---
+
+## 🛠️ Tecnologias
+
+| Tecnologia | Versão | Finalidade |
+|------------|--------|------------|
+| Java | 21 | Linguagem principal |
+| Spring Boot | 3.5.10 | Framework base |
+| Spring Data JPA | - | ORM e acesso ao banco |
+| Hibernate | - | Implementação JPA |
+| H2 Database | - | Banco em arquivo (desenvolvimento) |
+| Lombok | 1.18.32 | Redução de boilerplate |
+| SpringDoc OpenAPI | 2.8.6 | Documentação Swagger |
+| OpenFeign | - | Client HTTP declarativo (ViaCEP) |
+| Spring Security Crypto | - | BCrypt para hash de senhas |
+| JaCoCo | 0.8.11 | Cobertura de testes |
+
+---
+
+## 📁 Arquitetura
+
+O projeto segue arquitetura em camadas com separação clara de responsabilidades:
 
 ```
-src/main/java/br/uniesp/si/techback/
-├── config/              # Beans de configuração (BCrypt, RestTemplate, Swagger)
-├── client/              # FeignClient para ViaCEP
-├── controller/          # Camada REST (9 controllers)
-├── service/             # Lógica de negócio (8 services)
-├── service/externo/     # Integrações externas (BrasilAPI)
-├── repository/          # Spring Data JPA (8 repositories)
-├── model/               # Entidades JPA (8 entidades)
-├── dto/                 # Data Transfer Objects (12 DTOs)
-├── dto/externo/         # DTOs de APIs externas
-├── mapper/              # Conversores Entity ↔ DTO (4 mappers)
-├── exception/           # GlobalExceptionHandler + CustomBeanException
-├── filter/              # CorrelationIdFilter (MDC)
-├── validation/          # Custom Bean Validator (@CpfCnpj)
-└── TechbackApplication.java
+br.uniesp.si.techback/
+├── TechbackApplication.java     ← ponto de entrada (@SpringBootApplication)
+│
+├── client/                      ← clientes HTTP externos (Feign)
+│   └── ViaCepClient.java
+│
+├── config/                      ← Beans globais e configurações
+│   ├── AppConfig.java           ← BCryptPasswordEncoder + RestTemplate
+│   └── OpenApiConfig.java       ← configuração Swagger
+│
+├── controller/                  ← camada HTTP · recebe e responde requisições
+│
+├── dto/                         ← objetos de transferência (Request / Response)
+│   └── externo/                 ← DTOs de APIs de terceiros
+│
+├── exception/                   ← tratamento centralizado de erros
+│   ├── GlobalExceptionHandler.java
+│   └── CustomBeanException.java
+│
+├── filter/                      ← filtros HTTP (executados antes dos controllers)
+│   └── CorrelationIdFilter.java ← UUID por requisição via MDC
+│
+├── mapper/                      ← conversão Entity ↔ DTO
+│
+├── model/                       ← entidades JPA (tabelas do banco)
+│
+├── repository/                  ← Spring Data JPA + queries JPQL
+│
+├── service/                     ← lógica de negócio
+│   └── externo/                 ← integrações com APIs externas
+│
+└── validation/                  ← validações customizadas Bean Validation
+    ├── CpfCnpj.java             ← anotação @CpfCnpj
+    └── CpfCnpjValidator.java    ← algoritmo de dígitos verificadores
 ```
 
-## ✅ Funcionalidades implementadas
+### Fluxo de uma requisição
 
-### Usuários
-- `GET /usuarios` — listagem paginada (Page, size=10 padrão)
-- `POST /usuarios` — cadastro com validação Bean Validation + hash BCrypt
-- `GET /usuarios/{id}` — busca por ID
-- `PUT /usuarios/{id}` — atualização com validação
-- `DELETE /usuarios/{id}` — remoção (204 No Content)
+```
+Client (Swagger / Postman / React)
+    ↓
+CorrelationIdFilter  →  gera UUID e insere no MDC (aparece em todos os logs)
+    ↓
+Controller           →  valida DTO com @Valid · chama Service
+    ↓
+Service              →  aplica regras de negócio · usa Mapper e Repository
+    ↓
+Repository           →  persiste via JPA / executa JPQL personalizado
+    ↓
+H2 Database (arquivo ~/teckback20262)
 
-### Conteúdos
-- `GET /conteudos` — listagem paginada (Page, size=10 padrão)
-- `POST /conteudos` — cadastro com validação
-- `GET /conteudos/{id}` — busca por ID
-- `GET /conteudos/genero/{genero}` — filtro case-insensitive por gênero (JPQL)
-- `GET /conteudos/top?n=` — top N por relevância (JPQL + Pageable)
-- `GET /conteudos/buscar?termo=` — busca em título e sinopse (JPQL LIKE)
-- `GET /conteudos/lancados-apos?ano=` — filtro por ano de lançamento (JPQL)
-- `PUT /conteudos/{id}` — atualização com validação
-- `DELETE /conteudos/{id}` — remoção (204 No Content)
-
-### Filmes
-- `GET /filmes` — listagem completa
-- `GET /filmes/ordenado` — listagem ordenada por título (JPQL)
-- `GET /filmes/{id}` — busca por ID
-- `POST /filmes` — cadastro com validação
-- `PUT /filmes/{id}` — atualização com validação
-- `DELETE /filmes/{id}` — remoção (204 No Content)
-
-### Favoritos
-- `POST /favoritos` — adicionar conteúdo aos favoritos
-- `GET /favoritos/usuario/{usuarioId}` — favoritos recentes do usuário (JPQL ORDER BY)
-- `DELETE /favoritos/{id}` — remover dos favoritos (204 No Content)
-
-### Planos
-- `GET /planos` — listagem de planos
-- `POST /planos` — criar plano
-
-### Assinaturas
-- `POST /assinaturas` — criar assinatura (valida usuário e plano)
-- `GET /assinaturas/usuario/{id}` — assinaturas do usuário
-- `PUT /assinaturas/{id}/cancelar` — cancelar assinatura
-
-### Funcionários
-- `GET /funcionarios` — listagem
-- `POST /funcionarios` — incluir com preenchimento automático de endereço via ViaCEP
-
-### Integrações Externas
-- `GET /enderecos/{cep}` — busca endereço por CEP (ViaCEP via Feign)
-- `GET /feriados/{ano}` — feriados nacionais do ano (BrasilAPI via RestTemplate)
-
-## 📊 Status do projeto
-
-Última atualização: 2026-05-19
-
-| Módulo | Status |
-|--------|--------|
-| Usuários | ✓ |
-| Conteúdos | ✓ |
-| Filmes | ✓ |
-| Favoritos | ✓ |
-| Planos e Assinaturas | ✓ |
-| Funcionários | ✓ |
-| Integrações externas (ViaCEP + BrasilAPI) | ✓ |
-| Swagger / OpenAPI | ✓ |
-| Logs e Infraestrutura (MDC, Correlation-ID) | ✓ |
-| Custom Validator (@CpfCnpj) | ✓ |
-| Tratamento global de exceções | ✓ |
-| Paginação | ✓ |
-| MetodoPagamento (Service + Controller) | ◑ |
-
-## 🧪 Testes
-
-O projeto possui cobertura de testes abrangente:
-
-- **FilmeRepository**: 100% de cobertura
-- **FilmeService**: 80.9% de cobertura
-- **FilmeController**: 83.2% de cobertura
-- **FilmeMapper**: 100% de cobertura
-
-### Executando os Testes
-
-```bash
-# Executar todos os testes
-mvn test
-
-# Executar testes com relatório de cobertura
-mvn test jacoco:report
-
-# Visualizar relatório de cobertura
-# Abra: target/site/jacoco/index.html
+Em caso de erro → GlobalExceptionHandler → JSON padronizado (400/404/409/500)
 ```
 
-## 🏗️ Arquitetura e Boas Práticas
+---
 
-### Separação de Responsabilidades
-- **Controller**: Trata requisições HTTP, valida entrada com `@Valid`
-- **Service**: Contém a lógica de negócio e regras do domínio
-- **Repository**: Interface Spring Data JPA com queries JPQL customizadas
-- **DTO**: Objetos de transferência com Bean Validation
-- **Mapper**: Conversão entre entidades e DTOs
+## 🗂️ Endpoints
 
-### Validação
-- Bean Validation padrão: `@NotBlank`, `@Email`, `@Past`, `@Min`, `@Max`, `@DecimalMin`, `@DecimalMax`, `@Positive`, `@Size`
-- **Custom Validator**: `@CpfCnpj` — valida CPF (algoritmo de dígitos verificadores) e CNPJ
+### 👤 Usuários
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/usuarios` | Criar usuário · BCrypt · 201 + Location |
+| `GET` | `/usuarios` | Listagem paginada (`?page=0&size=10`) |
+| `GET` | `/usuarios/{id}` | Buscar por ID |
+| `PUT` | `/usuarios/{id}` | Atualizar dados |
+| `DELETE` | `/usuarios/{id}` | Remover · 204 |
 
-### Tratamento de Exceções
-- `@RestControllerAdvice` centralizado (`GlobalExceptionHandler`)
-- Resposta padronizada com `timestamp`, `status`, `error`, `message`, `path`
-- Cobre: 400 (validação), 400 (regra de negócio), 404, 409 (conflito), 500
+### 🎬 Conteúdos
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/conteudos` | Criar conteúdo |
+| `GET` | `/conteudos` | Listagem paginada |
+| `GET` | `/conteudos/{id}` | Buscar por ID |
+| `GET` | `/conteudos/genero/{genero}` | Filtro por gênero (JPQL case-insensitive) |
+| `GET` | `/conteudos/top?n=5` | Top N por relevância (JPQL) |
+| `GET` | `/conteudos/buscar?termo=` | Busca em título e sinopse (JPQL LIKE) |
+| `GET` | `/conteudos/lancados-apos?ano=` | Filtro por ano (JPQL) |
+| `PUT` | `/conteudos/{id}` | Atualizar |
+| `DELETE` | `/conteudos/{id}` | Remover · 204 |
 
-### Logging
-- `@Slf4j` com níveis INFO, DEBUG, WARN, ERROR
-- **Correlation-ID** por requisição via `CorrelationIdFilter` + MDC
-- Padrão de log: `HH:mm:ss [correlationId] LEVEL logger - mensagem`
+### 🎥 Filmes
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/filmes` | Listar todos |
+| `GET` | `/filmes/ordenado` | Listar ordenado por título (JPQL) |
+| `GET` | `/filmes/{id}` | Buscar por ID |
+| `POST` | `/filmes` | Criar filme |
+| `PUT` | `/filmes/{id}` | Atualizar |
+| `DELETE` | `/filmes/{id}` | Remover · 204 |
+
+### ⭐ Favoritos
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/favoritos` | Adicionar favorito |
+| `GET` | `/favoritos/usuario/{id}` | Favoritos recentes (JPQL ORDER BY data) |
+| `DELETE` | `/favoritos/{id}` | Remover · 204 |
+
+### 📦 Planos
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/planos` | Criar plano |
+| `GET` | `/planos` | Listar planos |
+
+### 📝 Assinaturas
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/assinaturas` | Criar assinatura |
+| `GET` | `/assinaturas/usuario/{id}` | Assinaturas do usuário |
+| `PUT` | `/assinaturas/{id}/cancelar` | Cancelar assinatura |
+
+### 💳 Métodos de Pagamento
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/metodos-pagamento` | Cadastrar método · 201 |
+| `GET` | `/metodos-pagamento/usuario/{id}` | Listar por usuário (JPQL ordenado) |
+| `DELETE` | `/metodos-pagamento/{id}` | Remover · 204 |
+
+### 👷 Funcionários
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/funcionarios` | Listar funcionários |
+| `POST` | `/funcionarios` | Incluir · endereço preenchido via ViaCEP |
+
+### 🌐 Integrações Externas
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/enderecos/{cep}` | Buscar endereço por CEP (ViaCEP via Feign) |
+| `GET` | `/feriados/{ano}` | Feriados nacionais do ano (BrasilAPI via RestTemplate) |
+
+---
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
-- Java 21 ou superior
-- Maven 3.6 ou superior
 
-### Execução
+- Java 21+
+- Maven 3.6+ (ou usar o `mvnw` incluso no projeto)
+
+### Executando
 
 ```bash
-# Clonar o projeto
-git clone <repositório>
+# 1. Clonar o repositório
+git clone https://github.com/josewilson/IESPFLIX.git
+cd IESPFLIX
 
-# Entrar no diretório
-cd tecback
-
-# Compilar e executar
-mvn spring-boot:run
+# 2. Compilar e executar
+./mvnw spring-boot:run
 ```
 
-A aplicação estará disponível em: `http://localhost:8080`
+A aplicação sobe em `http://localhost:8080`
 
-### Documentação da API
+---
 
-A documentação OpenAPI/Swagger está disponível em:
-`http://localhost:8080/swagger-ui.html`
+## 📖 Documentação da API
 
-### Console H2
+### Swagger UI
+```
+http://localhost:8080/swagger-ui.html
+```
+Acesse pelo browser para visualizar e testar todos os endpoints interativamente.
 
-O console do banco H2 está disponível em:
-`http://localhost:8080/h2`
+### Console H2 (banco de dados)
+```
+http://localhost:8080/h2
+```
 
-**Configurações de conexão:**
-- URL: `jdbc:h2:file:~/teckback20262`
-- User Name: `sa`
-- Password: *(vazio)*
+| Campo | Valor |
+|-------|-------|
+| JDBC URL | `jdbc:h2:file:~/teckback20262` |
+| User Name | `sa` |
+| Password | *(deixar em branco)* |
 
-## 🔧 Desenvolvimento
+---
 
-### Comandos Úteis
+## ✅ Checklist do Projeto
+
+| Requisito | Status |
+|-----------|--------|
+| Equipe com até 5 integrantes | ✅ |
+| Mínimo 1 endpoint por integrante | ✅ |
+| Lombok no backend | ✅ |
+| ORM com Spring Data JPA + JPQL personalizado | ✅ |
+| Integração com serviço externo (ViaCEP / BrasilAPI) | ✅ |
+| Validações + Custom Bean Validator (`@CpfCnpj`) | ✅ |
+| Logs com `@Slf4j` e rastreabilidade por UUID | ✅ |
+| Paginação com `Page<T>` e `Pageable` | ✅ |
+| Tratamento global de exceções centralizado | ✅ |
+
+---
+
+## 👥 Equipe
+
+| Integrante | Responsabilidade |
+|------------|-----------------|
+| **José Wilson Alves de Souza** | Líder técnico · Usuários · MetodoPagamento · Infraestrutura |
+| **Ana Julya Rodrigues Dionizio** | Conteúdos · Filtros JPQL · Buscas avançadas |
+| **Alex Júlio de Brito** | Filmes · Ordenação · Logs extensivos |
+| **Everton Fernandes S. Da Silva** | Assinaturas · Planos · Fluxo de cancelamento |
+| **Silvano Bernardino da S. Filho** | Favoritos · Integração ViaCEP · Integração BrasilAPI |
+
+---
+
+## 📄 Comandos Úteis
 
 ```bash
-# Compilar projeto
-mvn compile
+# Compilar
+./mvnw compile
 
 # Executar testes
-mvn test
+./mvnw test
 
-# Gerar relatório de cobertura
-mvn jacoco:report
+# Gerar relatório de cobertura (JaCoCo)
+./mvnw test jacoco:report
+# → Abrir: target/site/jacoco/index.html
 
-# Limpar projeto
-mvn clean
+# Empacotar
+./mvnw package
 
-# Empacotar aplicação
-mvn package
+# Limpar
+./mvnw clean
 ```
 
-## 👨‍💻 Equipe
+---
 
-| Nome |
-|------|
-| José Wilson Alves de Souza |
-| Ana Julya Rodrigues Dionizio |
-| Alex Júlio de Brito |
-| Everton Fernandes S. Da Silva |
-| Silvano Bernardino da S.Filho |
+<div align="center">
 
-Desenvolvido como parte da disciplina **Tecnologias para Backend (SpringBoot)** — UNIESP · Sistemas para Internet 2025/2026.
+Desenvolvido como projeto acadêmico da disciplina **Tecnologias para Backend (Spring Boot)**
+
+**Prof. Rodrigo Fujioka · UNIESP · Sistemas para Internet · 2025/P3**
+
+</div>
